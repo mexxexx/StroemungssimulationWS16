@@ -86,7 +86,7 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 		return 1;
 	}
 	
-	solveSORforPoisson(p, rhs, 1, 1e-10, 1e7, 0, xlength, ylength, imax, jmax);
+	solveSORforPoisson(p, rhs, 1.88177, 1e-10, 1e7, 0, xlength, ylength, imax, jmax);
 	free(rhs);
 	
 	double *evalGrid = sampleFDgridOnCellCenters(evalFunc, xlength, ylength, imax, jmax);

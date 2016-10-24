@@ -98,15 +98,66 @@ void applyHomogenousDirichletBC(double *p, int imax, int jmax) {
 	const int jmaxPlus2 = jmax+2;
 	const int imaxPlus1 = imax+1;
 	const int jmaxPlus1 = jmax+1;
+	const int lowerBound = (imaxPlus1 < jmaxPlus1) ? imaxPlus1 : jmaxPlus1;
+	int k;
 	
-	for (int i = 1; i < imaxPlus1; i++) {
-		p[POS2D(i, 0, jmaxPlus2)] = -p[POS2D(i, 1, jmaxPlus2)];
-		p[POS2D(i, jmaxPlus1, jmaxPlus2)] = -p[POS2D(i, jmax, jmaxPlus2)];
+	for (k = 1; k < lowerBound; k++) {
+		p[POS2D(k, 0, jmaxPlus2)] = -p[POS2D(k, 1, jmaxPlus2)];
+		p[POS2D(k, jmaxPlus1, jmaxPlus2)] = -p[POS2D(k, jmax, jmaxPlus2)];
+		p[POS2D(0, k, jmaxPlus2)] = -p[POS2D(1, k, jmaxPlus2)];
+		p[POS2D(imaxPlus1, k, jmaxPlus2)] = -p[POS2D(imax, k, jmaxPlus2)];
 	}
 	
-	for (int j = 1; j < jmaxPlus1; j++) {
-		p[POS2D(0, j, jmaxPlus2)] = -p[POS2D(1, j, jmaxPlus2)];
-		p[POS2D(imaxPlus1, j, jmaxPlus2)] = -p[POS2D(imax, j, jmaxPlus2)];
+	for (k = lowerBound; k < imaxPlus1; k++) {
+		p[POS2D(k, 0, jmaxPlus2)] = -p[POS2D(k, 1, jmaxPlus2)];
+		p[POS2D(k, jmaxPlus1, jmaxPlus2)] = -p[POS2D(k, jmax, jmaxPlus2)];
+	}
+	
+	for (k = lowerBound; k < jmaxPlus1; k++) {
+		p[POS2D(0, k, jmaxPlus2)] = -p[POS2D(1, k, jmaxPlus2)];
+		p[POS2D(imaxPlus1, k, jmaxPlus2)] = -p[POS2D(imax, k, jmaxPlus2)];
+	}
+}
+
+double calcres(double *p, double *rhs, int imax, int jmax, double oneMinusOmega, double oneOverDeltaXSquared,
+							double oneOverDeltaYSquared, double omegaRelaxation) {
+	double error = 0;
+	double sum = 0;
+	double twoPij = 0;
+	const int jmaxPlus2 = jmax+2;
+	
+	int ijlocation = 0;
+	int i,j;
+	for (i = 1; i <= imax; i++) {
+		for (j = 1; j <= jmax; j++) {
+			ijlocation = POS2D(i, j, jmaxPlus2);
+			twoPij = 2 * p[ijlocation];
+			sum = oneOverDeltaXSquared * (p[Pijlocation-jmaxPlus2] + p[ijlocation+jmaxPlus2] - twoPij) +
+				oneOverDeltaYSquared * (p[ijlocation-1] + p[ijlocation+1] - twoPij) - 
+				 rhs[ijlocation];
+			error += sum * sum;
+		}
+	}
+	error /= imax * jmax;
+	error = sqrt(error);	
+	return error;
+}
+
+void calcp(double *p, double *rhs, int imax, int jmax, double oneMinusOmega, double oneOverDeltaXSquared,
+							double oneOverDeltaYSquared, double omegaRelaxation) {
+	int i,j;
+	const int jmaxPlus2 = jmax+2;
+	
+	int ijlocation = 0;
+	
+	for (i = 1; i <= imax; i++) {
+		for (j = 1; j <= jmax; j++) {
+			ijlocation = POS2D(i, j, jmaxPlus2);
+			p[ijlocation] = oneMinusOmega * p[ijlocation] + omegaRelaxation * (
+					oneOverDeltaXSquared * (p[ijlocation-jmaxPlus2] + p[ijlocation+jmaxPlus2]) + 
+					oneOverDeltaYSquared * (p[ijlocation-1] + p[ijlocation+1]) - 
+					rhs[ijlocation]);
+		}
 	}
 }
 
@@ -119,7 +170,6 @@ void solveSORforPoisson(double *p, double *rhs, double omega, double epsilon, in
 	const double oneOverDeltaYSquared = 1 / (deltaY * deltaY);
 	const double omegaRelaxation = omega / (2 * (oneOverDeltaXSquared + oneOverDeltaYSquared));
 	
-	//const int imaxPlus2 = imax+2;
 	const int jmaxPlus2 = jmax+2;
 	
 	int ijlocation = 0;
@@ -136,28 +186,32 @@ void solveSORforPoisson(double *p, double *rhs, double omega, double epsilon, in
 		else
 			applyHomogenousDirichletBC(p, imax, jmax);
 			
-		for (i = 1; i <= imax; i++) {
+		
+		calcp(p, rhs, imax, jmax, oneMinusOmega, oneOverDeltaXSquared, oneOverDeltaYSquared, omegaRelaxation);
+		error = calcres(p, rhs, imax, jmax, oneMinusOmega, oneOverDeltaXSquared, oneOverDeltaYSquared, omegaRelaxation);
+			
+		/*for (i = 1; i <= imax; i++) {
 			for (j = 1; j <= jmax; j++) {
 				ijlocation = POS2D(i, j, jmaxPlus2);
 				p[ijlocation] = oneMinusOmega * p[ijlocation] + omegaRelaxation * (
-						oneOverDeltaXSquared * (p[POS2D(i-1, j, jmaxPlus2)] + p[POS2D(i+1, j, jmaxPlus2)]) + 
+						oneOverDeltaXSquared * (p[ijlocation-jmaxPlus2] + p[ijlocation+jmaxPlus2]) + 
 						oneOverDeltaYSquared * (p[ijlocation-1] + p[ijlocation+1]) - 
 						rhs[ijlocation]);
 			}
-		}
+		}*/
 		
-		for (i = 1; i <= imax; i++) {
+		/*for (i = 1; i <= imax; i++) {
 			for (j = 1; j <= jmax; j++) {
 				ijlocation = POS2D(i, j, jmaxPlus2);
 				twoPij = 2 * p[ijlocation];
-				sum = oneOverDeltaXSquared * (p[POS2D(i-1, j, jmaxPlus2)] + p[POS2D(i+1, j, jmaxPlus2)] - twoPij) +
+				sum = oneOverDeltaXSquared * (p[ijlocation-jmaxPlus2] + p[ijlocation+jmaxPlus2] - twoPij) +
 					oneOverDeltaYSquared * (p[ijlocation-1] + p[ijlocation+1] - twoPij) - 
 					 rhs[ijlocation];
 				error += sum * sum;
 			}
 		}
 		error /= imax * jmax;
-		error = sqrt(error);
+		error = sqrt(error);*/
 		
 		iter++;
 	}
