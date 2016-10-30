@@ -7,7 +7,7 @@
 
 /* Mit dieser Funktion wird p(0) initialisiert */
 double initFunc(double x, double y) {
-	return 1;
+	return 0;
 }
 
 double testFunc(double x, double y) {
@@ -24,22 +24,21 @@ int aufgabe1(double xlength, double ylength, int imax, int jmax) {
 	double *A = create2DpoissonMatrix(xlength, ylength, imax, jmax);
 	if (A == NULL)
 		return 1;
-		
+	//printMatrix(A, matSize, matSize);
+	
 	double *rhsGrid = sampleFDgridOnCellCorners(testFunc, xlength, ylength, imax, jmax);
 	if (rhsGrid == NULL) {
 		free(A);
 		return 1;
 	}
-	//printMatrix(testGrid, imax, jmax);
 		
 	double *x = malloc(matSize * sizeof(double));
 	double *b = malloc(matSize * sizeof(double));
-	int curr = 0;
-	for (int i = 0; i < imax; i++) {
-		for (int j = 0; j < jmax; j++) {
-			x[curr] = 0;
-			b[curr] = rhsGrid[POS2D(i, j, jmax)];
-			curr++;
+	for (int j = 0; j < jmax; j++) {
+		for (int i = 0; i < imax; i++) {
+			int pos = POS2D(i, j, imax);
+			x[pos] = 0;
+			b[pos] = rhsGrid[pos];
 		}
 	}
 	free(rhsGrid);
@@ -53,18 +52,18 @@ int aufgabe1(double xlength, double ylength, int imax, int jmax) {
 		free(x);
 		return 1;
 	}
-	curr = 0;
+	
 	double error = 0;
-	for (int i = 0; i < imax; i++) {
-		for (int j = 0; j < jmax; j++) {
-			double diff = fabs(evalGrid[POS2D(i, j, jmax)] - x[curr]);
+	for (int j = 0; j < jmax; j++) {
+		for (int i = 0; i < imax; i++) {
+			int pos = POS2D(i, j, imax);
+			double diff = fabs(evalGrid[pos] - x[pos]);
 			error += diff * diff;
-			curr++;
 		}
 	}
 	
 	//printMatrix(A, matSize, matSize);
-	//printMatrix(x, 1, matSize);
+	//printMatrix(x, matSize, 1);
 	
 	free(evalGrid);
 	free(A);
@@ -79,6 +78,7 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 	double *p = sampleFDgridOnCellCenters(initFunc, xlength, ylength, imax, jmax);
 	if (p == NULL)
 		return 1;
+	//printMatrix(p, jmax+2, imax+2);
 	
 	double *rhs = sampleFDgridOnCellCenters(testFunc, xlength, ylength, imax, jmax);
 	if (rhs == NULL) {
@@ -86,7 +86,8 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 		return 1;
 	}
 	
-	solveSORforPoisson(p, rhs, 1.88177, 1e-10, 1e7, 0, xlength, ylength, imax, jmax);
+	//printMatrix(rhs, jmax+2, imax+2);
+	solveSORforPoisson(p, rhs, 1.88177, 1e-8, 1e7, 0, xlength, ylength, imax, jmax);
 	free(rhs);
 	
 	double *evalGrid = sampleFDgridOnCellCenters(evalFunc, xlength, ylength, imax, jmax);
@@ -95,13 +96,13 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 		return 1;
 	}
 	
-	//printMatrix(p, imax +2, jmax+2);
-	//printMatrix(evalGrid, imax +2, jmax+2);
+	//printMatrix(p, jmax+2, imax+2);
+	//printMatrix(evalGrid, jmax+2, imax+2);
 	
 	double error = 0;
 	for (int i = 1; i <= imax; i++) {
 		for (int j = 1; j <= jmax; j++) {
-			double diff = fabs(evalGrid[POS2D(i, j, jmax+2)] - p[POS2D(i, j, jmax+2)]);
+			double diff = fabs(evalGrid[POS2D(i, j, imax+2)] - p[POS2D(i, j, imax+2)]);
 			error += diff * diff;
 		}
 	}
@@ -124,7 +125,8 @@ int main() {
 	printf("Auflösung auf der y-Achse: ");
 	scanf("%i", &jmax);
 	
+	xlength = imax;
+	ylength = jmax;
 	//return aufgabe1(xlength, ylength, imax, jmax);
-	
 	return aufgabe2(xlength, ylength, imax, jmax);
 }

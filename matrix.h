@@ -2,7 +2,7 @@
 #define MATRIX_H
 
 /* Rechnet eine 2D Position für den Zugriff auf ein 1D Array um */
-#define POS2D(i, j, width) (((width) * (i)) + j)
+#define POS2D(i, j, width) ((i) + ((j) * (width)))
 
 /* Gibt eine Matrix aus */
 void printMatrix(double *matrix, int rows, int columns);

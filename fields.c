@@ -13,9 +13,9 @@ double *sampleFDgridOnCellCorners(double (*func)(double, double), double xlength
 	double deltaX = xlength / (imax + 1);
 	double deltaY = ylength / (jmax + 1);
 
-	for (int i = 0; i < imax; i++)
-		for (int j = 0; j < jmax; j++)
-			grid[POS2D(i, j, jmax)] = func((i+1)*deltaX, (j+1)*deltaY);
+	for (int i = 0; i < imax; i++) 
+		for (int j = 0; j < jmax; j++) 
+			grid[POS2D(i, j, imax)] = func((i+1)*deltaX, (j+1)*deltaY);
 	
 	return grid;
 }
@@ -33,9 +33,9 @@ double *sampleFDgridOnCellCenters(double (*func)(double, double), double xlength
 	for (int i = 0; i < imax+2; i++) {
 		for (int j = 0; j < jmax+2; j++) {
 			if (i == 0 || i == imax+1 || j == 0 || j == jmax+1)
-				grid[POS2D(i, j, jmax+2)] = 0;
+				grid[POS2D(i, j, imax+2)] = 0;
 			else
-				grid[POS2D(i, j, jmax+2)] = func((i-0.5)*deltaX, (j-0.5)*deltaY);
+				grid[POS2D(i, j, imax+2)] = func((i-0.5)*deltaX, (j-0.5)*deltaY);
 		}
 	}
 	
