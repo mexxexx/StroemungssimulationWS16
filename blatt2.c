@@ -34,8 +34,8 @@ int aufgabe1(double xlength, double ylength, int imax, int jmax) {
 		
 	double *x = malloc(matSize * sizeof(double));
 	double *b = malloc(matSize * sizeof(double));
-	for (int j = 0; j < jmax; j++) {
-		for (int i = 0; i < imax; i++) {
+	for (int i = 0; i < imax; i++) {
+		for (int j = 0; j < jmax; j++) {
 			int pos = POS2D(i, j, imax);
 			x[pos] = 0;
 			b[pos] = rhsGrid[pos];
@@ -43,7 +43,7 @@ int aufgabe1(double xlength, double ylength, int imax, int jmax) {
 	}
 	free(rhsGrid);
 	
-	solveSOR(A, x, b, matSize, matSize, 1, 1e-10, 10000);
+	solveSOR(A, x, b, matSize, matSize, 1.88177, 1e-8, 10000);
 	free(b);
 	
 	double *evalGrid = sampleFDgridOnCellCorners(evalFunc, xlength, ylength, imax, jmax);
@@ -52,6 +52,7 @@ int aufgabe1(double xlength, double ylength, int imax, int jmax) {
 		free(x);
 		return 1;
 	}
+	//printMatrix(evalGrid, jmax, imax);
 	
 	double error = 0;
 	for (int j = 0; j < jmax; j++) {
@@ -125,8 +126,6 @@ int main() {
 	printf("Auflösung auf der y-Achse: ");
 	scanf("%i", &jmax);
 	
-	xlength = imax;
-	ylength = jmax;
 	//return aufgabe1(xlength, ylength, imax, jmax);
 	return aufgabe2(xlength, ylength, imax, jmax);
 }
