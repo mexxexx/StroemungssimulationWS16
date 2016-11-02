@@ -10,4 +10,8 @@ void printMatrix(double *matrix, int rows, int columns);
 /* Gibt eine zweidimensionale Matrix frei */
 void freeMatrix(double **matrix, int rows);
 
+void printScalarField(double *matrix, int imax, int jmax, double xlength, double ylength, char *filename);
+
+void printVectorField(double *xvalues, double *yvalues, int imax, int jmax, double xlength, double ylength, char *filename);
+
 #endif

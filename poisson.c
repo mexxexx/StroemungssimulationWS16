@@ -4,6 +4,12 @@
 #include "matrix.h"
 #include "poisson.h"
 
+#ifdef DEBUG
+#define PRINT_RES_DEBUG 1
+#else
+#define PRINT_RES_DEBUG 0
+#endif
+
 int getIndexInSystemMatrix(int i, int j, int jmax) {
 	return i * jmax + j;
 }
@@ -69,6 +75,9 @@ void solveSOR(double *A, double* x, double *b, int rows, int cols, double omega,
 			error = fmax(error, fabs(x[j]-xnew));
 			x[j] = xnew;
 		}
+		
+		if (PRINT_RES_DEBUG && ((iter < 50 && iter % 5 == 0) || (iter < 500 && iter % 50 == 0) || (iter < 1000 && iter % 100 == 0) || iter % 1000 == 0))
+			printf("#%i: %f\n", iter, error);
 		
 		iter++;
 	}
@@ -174,6 +183,8 @@ void solveSORforPoisson(double *p, double *rhs, double omega, double epsilon, in
 		}
 		error /= imax * jmax;
 		error = sqrt(error);
+		if (PRINT_RES_DEBUG && ((iter < 50 && iter % 5 == 0) || (iter < 500 && iter % 50 == 0) || (iter < 1000 && iter % 100 == 0) || iter % 1000 == 0))
+			printf("#%i: %f\n", iter, error);
 		
 		iter++;
 	}

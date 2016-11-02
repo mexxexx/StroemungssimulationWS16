@@ -5,17 +5,24 @@
 #include "poisson.h"
 #include "fields.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 /* Mit dieser Funktion wird p(0) initialisiert */
 double initFunc(double x, double y) {
 	return 0;
 }
 
+//cosinus fuer Neumann Randbedingungen
 double testFunc(double x, double y) {
-	return -(8 * M_PI * M_PI * sin(2 * M_PI * x) * sin (2 * M_PI * y));
+	//return -(8 * M_PI * M_PI * sin(2 * M_PI * x) * sin(2 * M_PI * y));
+	return -(8 * M_PI * M_PI * cos(2 * M_PI * x) * cos(2 * M_PI * y));
 }
 
 double evalFunc(double x, double y) {
-	return sin(2 * M_PI * x) * sin(2 * M_PI * y);
+	//return sin(2 * M_PI * x) * sin(2 * M_PI * y);
+	return cos(2 * M_PI * x) * cos(2 * M_PI * y);
 }
 
 int aufgabe1(double xlength, double ylength, int imax, int jmax) {
@@ -88,7 +95,7 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 	}
 	
 	//printMatrix(rhs, jmax+2, imax+2);
-	solveSORforPoisson(p, rhs, 1.88177, 1e-8, 1e7, 0, xlength, ylength, imax, jmax);
+	solveSORforPoisson(p, rhs, 1.88177, 1e-8, 1e7, 1, xlength, ylength, imax, jmax);
 	free(rhs);
 	
 	double *evalGrid = sampleFDgridOnCellCenters(evalFunc, xlength, ylength, imax, jmax);
@@ -97,8 +104,9 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 		return 1;
 	}
 	
-	//printMatrix(p, jmax+2, imax+2);
-	//printMatrix(evalGrid, jmax+2, imax+2);
+	/*printMatrix(p, jmax+2, imax+2);
+	printf("\n");
+	printMatrix(evalGrid, jmax+2, imax+2);*/
 	
 	double error = 0;
 	for (int i = 1; i <= imax; i++) {
@@ -107,6 +115,9 @@ int aufgabe2(double xlength, double ylength, int imax, int jmax) {
 			error += diff * diff;
 		}
 	}
+	
+	printScalarField(p, imax, jmax, xlength, ylength, "Druckfunktion.vtk");
+	printScalarField(evalGrid, imax, jmax, xlength, ylength, "Testfunktion.vtk");
 	
 	free(p);
 	free(evalGrid);
